@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>גאובור – ניחוש ישובים</title>
+  <link rel="stylesheet" href="game.css" />
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- ── Header ──────────────────────────────── -->
+    <header id="header">
+      <div class="header-right">
+        <div id="title">🗺️ גאובור</div>
+        <a href="help.html" id="btn-help" title="הוראות משחק">❓</a>
+      </div>
+
+      <div id="score-box">
+        <div id="score-label">ניקוד</div>
+        <div id="score">0</div>
+      </div>
+    </header>
+
+    <!-- ── Main ────────────────────────────────── -->
+    <div id="main">
+
+      <!-- Map -->
+      <div id="map-container">
+        <img id="map-img" src="data/israel.jpg" alt="מפת ישראל" draggable="false" />
+        <svg id="svg-overlay">
+          <circle id="settlement-circle" cx="0" cy="0" r="12" />
+        </svg>
+      </div>
+
+      <!-- Right panel -->
+      <div id="side-panel">
+
+        <!-- Current letter string -->
+        <div id="current-box">
+          <div id="current-label">מחרוזת נוכחית</div>
+          <div id="current-string"></div>
+        </div>
+
+        <!-- Mistake reveal info -->
+        <div id="info-panel">
+          <div id="info-panel-header">
+            <span id="info-panel-icon">🔴</span>
+            <span id="info-panel-title">אתה בור!</span>
+          </div>
+          <div id="info-name"></div>
+          <div id="info-details"></div>
+        </div>
+
+        <!-- Hint/Reveal options -->
+        <div id="reveal-box">
+          <div id="reveal-header">
+            <span id="reveal-title">💡 רמזים</span>
+            <div class="hint-buttons">
+              <button id="btn-reveal" onclick="revealOption()" title="מראה את הישובים שכבר עברו במחרוזת זו">👁
+                ארכיון</button>
+              <button id="btn-clue" onclick="showClue()" title="מראה איפה נמצא הישוב הבא">🎯 רמז</button>
+            </div>
+          </div>
+          <ul id="reveal-list"></ul>
+        </div>
+
+        <!-- Controls hint -->
+        <div id="hint-box">
+          <kbd>אות עברית</kbd> – הוסף אות<br />
+          <kbd>רווח</kbd> – אפס מחרוזת (שמור רשימת ישובים)<br />
+          <kbd>Escape</kbd> – אפס הכל
+        </div>
+
+        <!-- Buttons -->
+        <div id="buttons">
+          <button class="btn" id="btn-soft" onclick="softReset()">⟳ אפס מחרוזת</button>
+          <button class="btn" id="btn-hard" onclick="fullReset()">✕ אפס הכל</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ── Game Over Modal ──────────────────────────────── -->
+  <div id="game-over-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h1 class="modal-title">אתה בור ועם הארץ בידיעת הארץ!</h1>
+      <div id="game-over-score" class="modal-score">0</div>
+      <div id="game-over-compliment" class="modal-compliment"></div>
+
+      <h3 class="modal-subtitle">היישובים שמצאת:</h3>
+      <div class="modal-list-container">
+        <ul id="game-over-list" class="modal-list"></ul>
+      </div>
+
+      <button class="btn btn-close-modal" onclick="closeGameOverModal()">✕ סגור והמשך לשחק</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+
+</html>
