@@ -2214,9 +2214,7 @@
         "name": "גבעון החדשה",
         "population": "1171",
         "establishment": "1980",
-        "aliases": [
-            "גבעון"
-        ],
+        "aliases": [],
         "itm_east": 215084,
         "itm_north": 639466,
         "x": 127,
@@ -3906,7 +3904,9 @@
         "name": "טירת כרמל",
         "population": "32166",
         "establishment": "1949",
-        "aliases": [],
+        "aliases": [
+            "טירת הכרמל"
+        ],
         "itm_east": 197604,
         "itm_north": 740756,
         "x": 105,
@@ -8491,7 +8491,9 @@
         "name": "ענב",
         "population": "1228",
         "establishment": "1981",
-        "aliases": [],
+        "aliases": [
+            "עינב"
+        ],
         "itm_east": 212060,
         "itm_north": 687841,
         "x": 124,
@@ -8734,9 +8736,7 @@
         "name": "פקיעין חדשה",
         "population": "749",
         "establishment": "1955",
-        "aliases": [
-            "פקיעין"
-        ],
+        "aliases": [],
         "itm_east": 230497,
         "itm_north": 765441,
         "x": 149,
@@ -10979,5 +10979,25 @@
         "itm_north": 583595,
         "x": 121,
         "y": 335
+    },
+    "נורבח": {
+        "name": "חברון",
+        "population": "1000",
+        "establishment": "1929",
+        "aliases": [],
+        "itm_east": 160350,
+        "itm_north": 104500,
+        "x": 51,
+        "y": 963
+    },
+    "רתיבא": {
+        "name": "אביתר",
+        "population": "53",
+        "establishment": "2021",
+        "aliases": [],
+        "itm_east": 174063,
+        "itm_north": 169715,
+        "x": 70,
+        "y": 877
     }
 }
