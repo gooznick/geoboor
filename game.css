@@ -589,49 +589,124 @@ body {
 
   html,
   body {
-    height: auto;
-    overflow: visible;
+    height: 100%;
+    overflow: hidden;
   }
 
   #app {
-    height: auto;
+    height: 100vh;
     min-height: 100vh;
   }
 
   #main {
-    flex-direction: column;
-    overflow: visible;
+    flex-direction: row;
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 170px;
   }
 
   #map-container {
-    flex: none;
-    height: 45vh;
-    min-height: 250px;
-    width: 100%;
+    flex: 1.5;
+    width: auto;
+    height: 100%;
+    min-height: 0;
   }
 
   #side-panel {
-    width: 100%;
+    flex: 1;
+    width: auto;
+    min-width: 0;
     max-width: none;
-    flex: none;
-    max-height: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px;
+    height: 100%;
+    padding: 4px;
+    gap: 4px;
+    border-top: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: static;
   }
 
-  /* Make current string slightly smaller on very small screens */
+  #virtual-keyboard {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 155px;
+    /* give 15px more back to screen */
+    background: var(--dark);
+    margin: 0;
+    padding: 8px 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 50;
+    justify-content: flex-end;
+  }
+
+  #current-box {
+    padding: 6px 8px;
+    flex-shrink: 0;
+  }
+
   #current-string {
-    font-size: 1.6rem;
-    min-height: 40px;
+    font-size: 1.1rem;
+    min-height: 35px;
+    letter-spacing: 0px;
+  }
+
+  #hint-box {
+    display: none;
+  }
+
+  #reveal-box {
+    padding: 6px;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  #reveal-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .hint-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  #btn-reveal,
+  #btn-soft {
+    display: none;
+  }
+
+  #btn-clue {
+    padding: 6px;
+    font-size: 0.75rem;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .btn {
+    padding: 6px 0;
+    font-size: 0.8rem;
+  }
+
+  #buttons {
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+    padding-bottom: 20px;
+    /* buffer at bottom so scroll doesn't obscure button */
   }
 
   .kb-key {
     font-size: 1.1rem;
-    padding: 8px 0;
+    padding: 5px 0;
   }
 
   .kb-row {
-    gap: 4px;
+    gap: 3px;
     direction: ltr;
   }
 }
@@ -644,11 +719,15 @@ body {
   pointer-events: none;
   font-size: 3rem;
   font-weight: 800;
-  text-align: center;
   color: var(--gold);
   text-shadow: 0 0 20px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.8), 0 4px 6px rgba(0, 0, 0, 0.5);
-  white-space: nowrap;
   letter-spacing: 1px;
+
+  /* Multiline support */
+  max-width: 90vw;
+  white-space: normal;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .easter-egg-heart.pumping {
