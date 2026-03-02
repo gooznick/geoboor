@@ -115,6 +115,7 @@ let settlementsData = {};       // canonKey → { name, aliases, x, y, ... }
 let keyVariantMap = {};         // variantKey → canonical key
 let variantDisplayName = {};    // variantKey → display name (name/alias that generated it)
 let allVariantKeys = new Set(); // all valid variant reversed-name strings
+let easterEggKeys = new Set();  // keys for easter egg settlements
 let state = {
     current: '',
     wrongLetter: null,
@@ -124,6 +125,7 @@ let state = {
     score: 0,
     lastKeyTime: null,
     chosenCircleKey: null,
+    easterEggsFound: new Set()
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────
@@ -244,6 +246,57 @@ function showInfoPanel(canonicalKey, extraMsg) {
 
 function hideInfoPanel() {
     infoPanel.classList.remove('visible');
+}
+
+// ── Easter Egg ────────────────────────────────────────────────────
+
+function triggerEasterEgg() {
+    const floater = document.createElement('div');
+    floater.className = 'easter-egg-heart pumping';
+
+    // Use an explicit inline SVG for guaranteed cross-OS visibility
+    floater.innerHTML = `
+        <svg viewBox="0 0 32 29.6" width="120" height="120">
+            <path fill="#ff3366" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+    `;
+
+    const startX = window.innerWidth / 2;
+    const startY = window.innerHeight / 2;
+    floater.style.left = `${startX}px`;
+    floater.style.top = `${startY}px`;
+
+    document.body.appendChild(floater);
+
+    setTimeout(() => {
+        floater.textContent = '+50';
+        floater.classList.remove('pumping');
+        floater.classList.add('moving-to-score');
+
+        const scoreRect = scoreEl.getBoundingClientRect();
+        const targetX = scoreRect.left + scoreRect.width / 2;
+        const targetY = scoreRect.top + scoreRect.height / 2;
+
+        const dx = targetX - startX;
+        const dy = targetY - startY;
+
+        floater.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.5)`;
+        floater.style.opacity = '0';
+
+        setTimeout(() => {
+            state.score += 50;
+            scoreEl.textContent = state.score;
+            scoreEl.style.transition = 'all 0.3s ease';
+            scoreEl.style.color = '#4ecdc4';
+            scoreEl.style.transform = 'scale(1.5)';
+            showBonus(50); // also trigger +50 float effect to emphasize
+            setTimeout(() => {
+                scoreEl.style.color = '';
+                scoreEl.style.transform = '';
+            }, 300);
+            floater.remove();
+        }, 1000);
+    }, 2000);
 }
 
 // ── Game Over Modal ───────────────────────────────────────────────
@@ -494,6 +547,15 @@ function handleLetter(ch) {
     state.lastKeyTime = now;
 
     const userCurrent = ch + state.current;
+
+    // Easter Egg Check (user turn)
+    for (const key of easterEggKeys) {
+        if (!state.easterEggsFound.has(key) && userCurrent.startsWith(key)) {
+            state.easterEggsFound.add(key);
+            triggerEasterEgg();
+        }
+    }
+
     const options = chooseAll(userCurrent, allVariantKeys, state.forbidSet);
 
     if (!options.length) {
@@ -537,12 +599,21 @@ function handleLetter(ch) {
     drawCircle(canonKey);
     updateDisplay();
     addScore(bonus);
+
+    // Easter Egg Check (computer turn)
+    for (const key of easterEggKeys) {
+        if (!state.easterEggsFound.has(key) && state.current.startsWith(key)) {
+            state.easterEggsFound.add(key);
+            triggerEasterEgg();
+        }
+    }
 }
 
 function softReset() {
     state.current = '';
     state.wrongLetter = null;
     state.lastKeyTime = null;
+    state.easterEggsFound.clear();
     clearForbid();
     updateDisplay();
     hideInfoPanel();
@@ -554,6 +625,7 @@ function fullReset() {
     state.wrongLetter = null;
     state.score = 0;
     state.lastKeyTime = null;
+    state.easterEggsFound.clear();
     clearForbid();
     scoreEl.textContent = '0';
     bonusFlash.textContent = '';
@@ -613,6 +685,11 @@ async function init() {
         // canonical key always maps to itself
         keyVariantMap[canonKey] = canonKey;
         if (!variantDisplayName[canonKey]) variantDisplayName[canonKey] = entry.name;
+    }
+
+    // Initialize easter eggs
+    for (const name of ['פסגות', 'כרמיאל', 'שדה יעקב']) {
+        easterEggKeys.add(stripAndReverse(name));
     }
 
     // Init Hint buttons with constants
