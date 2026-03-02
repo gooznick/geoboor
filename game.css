@@ -589,26 +589,28 @@ body {
 
   html,
   body {
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    /* Locks body to visual viewport */
+    height: auto;
+    overflow: visible;
+    position: static;
     width: 100%;
   }
 
   #app {
     height: 100vh;
+    /* Base height but allow growth */
     height: 100dvh;
-    /* Dynamic Viewport Height fixes toolbar overlap */
     min-height: 100dvh;
     width: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   #main {
     flex-direction: row;
     position: relative;
+    flex: 1;
+    /* Take up all available space below header */
     overflow: hidden;
-    padding-bottom: 170px;
   }
 
   #map-container {
@@ -624,28 +626,38 @@ body {
     min-width: 0;
     max-width: none;
     height: 100%;
-    padding: 4px;
-    gap: 4px;
+    padding: 0;
+    gap: 0;
     border-top: none;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 4px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Hide outer overflow, scroll inner */
+  }
+
+  /* We add a new inner wrapper constraint for the scrolling parts of side panel */
+  #side-panel> :not(#virtual-keyboard) {
+    padding: 0 4px;
+    margin-top: 4px;
+  }
+
+  #VirtualKeyboardArea {
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   #virtual-keyboard {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+    margin-top: auto;
+    flex-shrink: 0;
     width: 100%;
-    height: auto;
-    min-height: 155px;
     background: var(--dark);
-    margin: 0;
     padding: 8px 6px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    /* Accommodate iPhone home indicator / android nav */
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 50;
     justify-content: flex-end;

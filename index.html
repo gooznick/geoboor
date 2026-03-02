@@ -39,46 +39,49 @@
       <!-- Right panel -->
       <div id="side-panel">
 
-        <!-- Current letter string -->
-        <div id="current-box">
-          <div id="current-label">מחרוזת נוכחית</div>
-          <div id="current-string"></div>
-        </div>
-
-        <!-- Mistake reveal info -->
-        <div id="info-panel">
-          <div id="info-panel-header">
-            <span id="info-panel-icon">🔴</span>
-            <span id="info-panel-title">אתה בור!</span>
+        <!-- Content wrapper for scrolling -->
+        <div id="VirtualKeyboardArea">
+          <!-- Current letter string -->
+          <div id="current-box">
+            <div id="current-label">מחרוזת נוכחית</div>
+            <div id="current-string"></div>
           </div>
-          <div id="info-name"></div>
-          <div id="info-details"></div>
-        </div>
 
-        <!-- Hint/Reveal options -->
-        <div id="reveal-box">
-          <div id="reveal-header">
-            <span id="reveal-title">💡 רמזים</span>
-            <div class="hint-buttons">
-              <button id="btn-reveal" onclick="revealOption()" title="מראה את הישובים שכבר עברו במחרוזת זו">👁
-                ארכיון</button>
-              <button id="btn-clue" onclick="showClue()" title="מראה איפה נמצא הישוב הבא">🎯 רמז</button>
+          <!-- Mistake reveal info -->
+          <div id="info-panel">
+            <div id="info-panel-header">
+              <span id="info-panel-icon">🔴</span>
+              <span id="info-panel-title">אתה בור!</span>
             </div>
+            <div id="info-name"></div>
+            <div id="info-details"></div>
           </div>
-          <ul id="reveal-list"></ul>
-        </div>
 
-        <!-- Controls hint -->
-        <div id="hint-box">
-          <kbd>אות עברית</kbd> – הוסף אות<br />
-          <kbd>רווח</kbd> – אפס מחרוזת (שמור רשימת ישובים)<br />
-          <kbd>Escape</kbd> – אפס הכל
-        </div>
+          <!-- Hint/Reveal options -->
+          <div id="reveal-box">
+            <div id="reveal-header">
+              <span id="reveal-title">💡 רמזים</span>
+              <div class="hint-buttons">
+                <button id="btn-reveal" onclick="revealOption()" title="מראה את הישובים שכבר עברו במחרוזת זו">👁
+                  ארכיון</button>
+                <button id="btn-clue" onclick="showClue()" title="מראה איפה נמצא הישוב הבא">🎯 רמז</button>
+              </div>
+            </div>
+            <ul id="reveal-list"></ul>
+          </div>
 
-        <!-- Buttons -->
-        <div id="buttons">
-          <button class="btn" id="btn-soft" onclick="softReset()">⟳ אפס מחרוזת</button>
-          <button class="btn" id="btn-hard" onclick="fullReset()">✕ אפס הכל</button>
+          <!-- Controls hint -->
+          <div id="hint-box">
+            <kbd>אות עברית</kbd> – הוסף אות<br />
+            <kbd>רווח</kbd> – אפס מחרוזת (שמור רשימת ישובים)<br />
+            <kbd>Escape</kbd> – אפס הכל
+          </div>
+
+          <!-- Buttons -->
+          <div id="buttons">
+            <button class="btn" id="btn-soft" onclick="softReset()">⟳ אפס מחרוזת</button>
+            <button class="btn" id="btn-hard" onclick="fullReset()">✕ אפס הכל</button>
+          </div>
         </div>
 
         <!-- Virtual Keyboard -->
