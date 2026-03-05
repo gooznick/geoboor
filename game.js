@@ -10,104 +10,11 @@ const BONUS_MED_TIME = 10;  // Seconds threshold for med bonus
 const BONUS_MED_PTS = 10;   // Med bonus points
 
 // ── Globals ───────────────────────────────────────────────────────
-const HEBREW_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
-const SOFIT_MAP = { 'ם': 'מ', 'ן': 'נ', 'ץ': 'צ', 'ף': 'פ', 'ך': 'כ' };
+// Algorithms moved to logic.js
 
-function removeSofit(ch) {
-    return SOFIT_MAP[ch] ?? ch;
-}
+// ── Game logic  ──────────
 
-function isHebrewLetter(ch) {
-    return HEBREW_LETTERS.has(ch);
-}
-
-// Two consecutive yod (י\u05D9) → single yod, two vav (ו\u05D5) → single vav
-const RE_DOUBLE_YOD = /\u05D9\u05D9/g;   // יי
-const RE_DOUBLE_VAV = /\u05D5\u05D5/g;   // וו
-
-/**
- * Generate the set of name-string variants by applying יי→י / וו→ו
- * BEFORE stripping spaces, so word boundaries block cross-word substitutions.
- * e.g. "תלמי יחיאל" keeps both יי (they're in separate words); "איייל" collapses to "איל".
- */
-function nameVariants(name) {
-    const v1 = name.replace(RE_DOUBLE_YOD, '\u05D9');
-    const v2 = name.replace(RE_DOUBLE_VAV, '\u05D5');
-    const v3 = v1.replace(RE_DOUBLE_VAV, '\u05D5');
-    return new Set([name, v1, v2, v3]);
-}
-
-/** Strip non-Hebrew chars, reverse, and normalize sofit letters in one step. */
-function stripAndReverse(name) {
-    return Array.from(name.replace(/[^\u05D0-\u05EA]/g, ''))
-        .reverse()
-        .map(c => SOFIT_MAP[c] ?? c)
-        .join('');
-}
-
-function getVariants(entry) {
-    const rawNames = [entry.name, ...(entry.aliases || [])];
-    const variants = new Set();
-    for (const n of rawNames) {
-        if (!n) continue;
-        for (const v of nameVariants(n)) variants.add(stripAndReverse(v));
-    }
-    return [...variants];
-}
-
-// ── Game logic (ported from choose_all / find_all_former) ──────────
-
-/**
- * Returns all possibilities for what can follow the current accumulated string.
- * Returns array of { letter, key, former } where:
- *   - letter: next letter the computer would add (to the left)
- *   - key: variant key of the chosen settlement
- *   - former: variant keys of settlements already consumed in this path
- *
- * `forbidCanon`: canonical keys of permanently forbidden settlements (set on mistake only).
- */
-function chooseAll(current, keySet, forbidCanon, former) {
-    former = former || [];
-    if (!current) {
-        return [...keySet]
-            .filter(k => !forbidCanon.has(keyVariantMap[k]))
-            .map(k => ({ letter: k[k.length - 1], key: k, former: [] }));
-    }
-
-    const results = [];
-
-    // Find variant keys that END WITH current (settlement whose name starts with current read RTL)
-    for (const k of keySet) {
-        if (k.endsWith(current) && k !== current &&
-            !former.includes(k) && !forbidCanon.has(keyVariantMap[k])) {
-            results.push({ letter: k[k.length - 1 - current.length], key: k, former });
-        }
-    }
-
-    // Check if current ENDS WITH a full settlement key (it was consumed)
-    for (const k of keySet) {
-        if (current.endsWith(k) && !former.includes(k) && !forbidCanon.has(keyVariantMap[k])) {
-            const newFormer = [...former, k];
-            const newCurrent = current.slice(0, current.length - k.length);
-            results.push(...chooseAll(newCurrent, keySet, forbidCanon, newFormer));
-        }
-    }
-
-    return results;
-}
-
-/**
- * Returns the set of variant keys that appear in ALL options (guaranteed consumed).
- */
-function findAllFormer(options) {
-    if (!options.length) return new Set();
-    let common = new Set(options[0].former);
-    for (const opt of options) {
-        const s = new Set(opt.former);
-        common = new Set([...common].filter(x => s.has(x)));
-    }
-    return common;
-}
+// chooseAll and findAllFormer moved to logic.js
 
 // ── State ─────────────────────────────────────────────────────────
 
@@ -115,6 +22,8 @@ let settlementsData = {};       // canonKey → { name, aliases, x, y, ... }
 let keyVariantMap = {};         // variantKey → canonical key
 let variantDisplayName = {};    // variantKey → display name (name/alias that generated it)
 let allVariantKeys = new Set(); // all valid variant reversed-name strings
+let baseVariantKeys = new Set(); // strictly the unmodified names and aliases keys
+let outpostKeys = new Set();     // purely outpost keys (which the computer avoids randomly selecting)
 let easterEggData = {};         // Reversed validation string → {msg, points}
 let state = {
     current: '',
@@ -126,7 +35,8 @@ let state = {
     lastKeyTime: null,
     chosenCircleKey: null,
     displayOffset: 0,
-    easterEggsFound: new Set()
+    easterEggsFound: new Set(),
+    inactivityTimer: null
 };
 
 const audioManager = new AudioManager();
@@ -303,9 +213,17 @@ function getCompliment(score) {
     if (score < 50) return "לא נורא, תמיד יש פעם הבאה!";
     if (score < 150) return "התחלה טובה! נראה שאתם מכירים את הארץ.";
     if (score < 300) return "יפה מאוד! יש לכם ידע גיאוגרפי מרשים.";
-    if (score < 600) return "כל הכבוד! אתם ממש שולטים במפת ישראל.";
-    if (score < 1000) return "מדהים! סייר מדופלם של ארץ ישראל.";
-    return "אלוף הארץ! אין נקודה על המפה שאתם לא מכירים!";
+    if (score < 500) return "כל הכבוד! אתם מתחילים ממש לשלוט במפת ישראל.";
+    if (score < 750) return "מרשים מאוד! סייר מדופלם של ארץ ישראל.";
+    if (score < 1000) return "מדהים! יש לכם זיכרון פנומנלי ליישובים.";
+    if (score < 1250) return "וואו! המפה קטנה עליכם.";
+    if (score < 1500) return "אדיר! האם הייתם נווטים בפלמ\"ח?";
+    if (score < 1800) return "בלתי ייאמן! אתם מכירים כל שביל וכביש גישה במדינה.";
+    if (score < 2100) return "איזה ידע! אי אפשר להתקיל אתכם בכלל.";
+    if (score < 2500) return "המוח שלכם עובד כמו GPS על טורבו! כבוד עצום.";
+    if (score < 2900) return "רב-אמן ארצישראלי! שלטון מוחלט במפה.";
+    if (score < 3200) return "הראיתם למחשב מי כאן הבוס! פשוט מבריק.";
+    return "אגדה חיה! אין נקודה על המפה שאתם לא מכירים בעל פה! שלמות.";
 }
 
 function showGameOverModal(gatheredSet) {
@@ -334,7 +252,7 @@ function showGameOverModal(gatheredSet) {
 
             const nameSpan = document.createElement('span');
             nameSpan.className = 'ml-name';
-            nameSpan.textContent = entry.name;
+            nameSpan.textContent = `${entry.name}`;
 
             const dataSpan = document.createElement('span');
             dataSpan.className = 'ml-data';
@@ -400,13 +318,17 @@ function revealOption() {
         return;
     }
 
-    // Find a valid option
-    const playableOptions = chooseAll(state.current, allVariantKeys, state.forbidSet);
-    const options = playableOptions.length ? playableOptions : chooseAll(state.current, allVariantKeys, new Set());
+    // Pass baseVariantKeys so the computer only reveals/selects base keys for new terms
+    const playableOptions = chooseAll(state.current, allVariantKeys, state.forbidSet, keyVariantMap, [], baseVariantKeys);
+    const options = playableOptions.length ? playableOptions : chooseAll(state.current, allVariantKeys, new Set(), keyVariantMap, [], baseVariantKeys);
 
     if (!options.length) return; // shouldn't happen unless current string is invalid
 
-    const picked = randChoice(options);
+    // Hint should also favor non-outposts if possible
+    const nonOutpostOptions = options.filter(opt => !outpostKeys.has(opt.key));
+    const compOptions = nonOutpostOptions.length > 0 ? nonOutpostOptions : options;
+
+    const picked = randChoice(compOptions);
     const settlementsToShow = picked.former; // Only show the history, not the current one
 
     if (settlementsToShow.length === 0) {
@@ -552,6 +474,8 @@ function handleLetter(ch) {
     if (!isHebrewLetter(ch)) return;
 
     audioManager.playUserSelect();
+    hideInactivityTeaser();
+    resetInactivityTimer();
 
     if (state.wrongLetter) {
         state.wrongLetter = null;
@@ -574,28 +498,17 @@ function handleLetter(ch) {
     const userCurrent = ch + state.current;
 
     // Easter Egg Check (user turn)
-    for (const [key, egg] of Object.entries(easterEggData)) {
-        if (!state.easterEggsFound.has(key)) {
-            // Find the canonical key for this easter egg
-            const canonKey = keyVariantMap[key];
-            if (canonKey) {
-                // Find all variants for this canonical key
-                const variants = Object.keys(keyVariantMap).filter(k => keyVariantMap[k] === canonKey);
-                // Check if userCurrent starts with any of these variants
-                if (variants.some(v => userCurrent.startsWith(v))) {
-                    state.easterEggsFound.add(key);
-                    triggerEasterEgg(egg.msg, egg.points);
-                }
-            }
-        }
+    const newlyFoundUser = checkEasterEggs(userCurrent, easterEggData, keyVariantMap, state.easterEggsFound);
+    for (const egg of newlyFoundUser) {
+        triggerEasterEgg(egg.msg, egg.points);
     }
 
-    const options = chooseAll(userCurrent, allVariantKeys, state.forbidSet);
+    const options = chooseAll(userCurrent, allVariantKeys, state.forbidSet, keyVariantMap, [], baseVariantKeys, outpostKeys);
 
     if (!options.length) {
         // MISTAKE: find best option from the state BEFORE the wrong key
         // (mirrors: options = choose_all(current[1:], settlements, forbid))
-        const prevOptions = chooseAll(state.current, allVariantKeys, state.forbidSet);
+        const prevOptions = chooseAll(state.current, allVariantKeys, state.forbidSet, keyVariantMap, [], baseVariantKeys, outpostKeys);
 
         let gatheredSet = new Set();
         if (prevOptions.length) {
@@ -623,7 +536,12 @@ function handleLetter(ch) {
 
     hideInfoPanel();
 
-    const picked = randChoice(options);
+    // The computer prefers to choose non-outpost settlements if available.
+    // It only picks an outpost if absolutely forced (i.e. the user typed a string only matching outposts).
+    const nonOutpostOptions = options.filter(opt => !outpostKeys.has(opt.key));
+    const compOptions = nonOutpostOptions.length > 0 ? nonOutpostOptions : options;
+
+    const picked = randChoice(compOptions);
     // Always normalize the computer's letter — no sofiot in the string!
     const compLetter = removeSofit(picked.letter);
     const canonKey = keyVariantMap[picked.key];
@@ -637,17 +555,9 @@ function handleLetter(ch) {
     addScore(bonus);
 
     // Easter Egg Check (computer turn)
-    for (const [key, egg] of Object.entries(easterEggData)) {
-        if (!state.easterEggsFound.has(key)) {
-            const canonKey = keyVariantMap[key];
-            if (canonKey) {
-                const variants = Object.keys(keyVariantMap).filter(k => keyVariantMap[k] === canonKey);
-                if (variants.some(v => state.current.startsWith(v))) {
-                    state.easterEggsFound.add(key);
-                    triggerEasterEgg(egg.msg, egg.points);
-                }
-            }
-        }
+    const newlyFoundComp = checkEasterEggs(state.current, easterEggData, keyVariantMap, state.easterEggsFound);
+    for (const egg of newlyFoundComp) {
+        triggerEasterEgg(egg.msg, egg.points);
     }
 }
 
@@ -661,6 +571,8 @@ function softReset() {
     updateDisplay();
     hideInfoPanel();
     hideCircle();
+    hideInactivityTeaser();
+    resetInactivityTimer();
 }
 
 function fullReset() {
@@ -677,6 +589,93 @@ function fullReset() {
     updateDisplay();
     hideInfoPanel();
     hideCircle();
+    hideInactivityTeaser();
+    resetInactivityTimer();
+}
+
+// ── Inactivity Teaser ─────────────────────────────────────────────
+
+function resetInactivityTimer() {
+    if (state.inactivityTimer) {
+        clearTimeout(state.inactivityTimer);
+    }
+    state.inactivityTimer = setTimeout(showInactivityTeaser, 7000);
+}
+
+function showInactivityTeaser() {
+    if (state.wrongLetter || gameOverModal.classList.contains('visible')) return;
+
+    const options = chooseAll(state.current, allVariantKeys, state.forbidSet, keyVariantMap, [], baseVariantKeys, outpostKeys);
+    if (!options.length) return;
+
+    const uniqueLetters = new Set(options.map(opt => opt.letter)).size;
+    const uniqueSettlements = new Set(options.map(opt => keyVariantMap[opt.key])).size;
+
+    // Don't show the teaser if it's the start of the game or just after completing a settlement
+    if (uniqueLetters >= 22) return;
+
+    let phrases = [];
+
+    // Format numbers according to Hebrew grammar
+    const lettersText = uniqueLetters === 1 ? 'אות אחת' : `${uniqueLetters} אותיות`;
+    const settlementsText = uniqueSettlements === 1 ? 'יישוב אחד' : `${uniqueSettlements} יישובים`;
+
+    if (uniqueLetters === 1 || uniqueSettlements === 1) {
+        phrases = [
+            `נשארתי רק עם ${lettersText} ו-${settlementsText}! זה מתחמם. 🥵`,
+            `יש מולי בדיוק ${lettersText} עבור ${settlementsText} שעובדים... קרב צמוד! 🎯`,
+            `מצאתי בדיוק ${lettersText} עבור ${settlementsText}. הולך להיות פה מעניין! 🧐`,
+            `זהו זה, ${settlementsText} ו-${lettersText} בלבד יצילו אתכם. ⏳`,
+            `נותר רק ${settlementsText} עם ${lettersText}. חושבים שתמצאו אותו? 🤔`,
+            `הצטמצמנו ל-${lettersText} ול-${settlementsText} בלבד... אל תפספסו! 🤫`
+        ];
+    } else {
+        phrases = [
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים! נראה לי שמיצינו. 😏`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים — לא מספיק? 😜`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים! מה עוד צריך בכלל? 🙃`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים… זה כבר יותר מדי טוב. 😏`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים! נראה אתכם מתעלים על זה. 😉`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים — נראה לי שסגרנו פינה. 😌`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים! מי מביא יותר? 😏`,
+            `יש לי רעיונות ל־${uniqueLetters} אותיות ול־${uniqueSettlements} יישובים… ואני רק מתחיל. 😜`,
+            `ראיתי פה איזה ${uniqueLetters} אותיות ו-${uniqueSettlements} יישובים. מה דעתכם? 🥸`,
+            `מזהה לפחות ${uniqueLetters} אותיות שטובות ל-${uniqueSettlements} יישובים. אל תגידו שקשה! 😎`
+        ];
+    }
+
+    const randomMsg = phrases[Math.floor(Math.random() * phrases.length)];
+
+    let teaserEl = document.getElementById('inactivity-teaser');
+    if (!teaserEl) {
+        teaserEl = document.createElement('div');
+        teaserEl.id = 'inactivity-teaser';
+        teaserEl.className = 'inactivity-teaser';
+        document.getElementById('map-container').appendChild(teaserEl);
+    }
+
+    // Parse the emoji out to style it separately if needed, though they look fine embedded. We'll extract the last character for emoji styling.
+    const msgBody = randomMsg.slice(0, -2);
+    const emoji = randomMsg.slice(-2).trim();
+
+    teaserEl.innerHTML = `${msgBody}<span class="teaser-emoji">${emoji}</span>`;
+
+    // Force reflow
+    void teaserEl.offsetWidth;
+    teaserEl.classList.remove('blink');
+    teaserEl.classList.add('visible', 'blink');
+    audioManager.playTeaserBlip();
+
+    // Remove the teaser after the blink animation finishes (3 * 0.6s = 1.8s + buffer = 2.5s)
+    if (state.teaserTimeout) clearTimeout(state.teaserTimeout);
+    state.teaserTimeout = setTimeout(hideInactivityTeaser, 2500);
+}
+
+function hideInactivityTeaser() {
+    const teaserEl = document.getElementById('inactivity-teaser');
+    if (teaserEl) {
+        teaserEl.classList.remove('visible');
+    }
 }
 
 // ── Keyboard ──────────────────────────────────────────────────────
@@ -718,22 +717,17 @@ async function init() {
 
     settlementsData = raw;
 
-    // Build keyVariantMap, variantDisplayName, allVariantKeys
-    for (const [canonKey, entry] of Object.entries(raw)) {
-        const rawNames = [entry.name, ...(entry.aliases || [])].filter(Boolean);
-        for (const n of rawNames) {
-            // Apply יי→י / וו→ו BEFORE stripping spaces (word boundaries protect cross-word joins)
-            for (const variantName of nameVariants(n)) {
-                const key = stripAndReverse(variantName);
-                allVariantKeys.add(key);
-                keyVariantMap[key] = canonKey;
-                if (!variantDisplayName[key]) variantDisplayName[key] = n;
-            }
-        }
-        // canonical key always maps to itself
-        keyVariantMap[canonKey] = canonKey;
-        if (!variantDisplayName[canonKey]) variantDisplayName[canonKey] = entry.name;
-    }
+    // Build keyVariantMap, variantDisplayName, allVariantKeys, baseVariantKeys
+    const dicts = buildDictionaries(raw);
+
+    // We update the globals instead of overriding them because other functions 
+    // might be looking at these specific references, though replacing them is usually fine.
+    // In this game's case, replacing the references is safe since `init()` is called once.
+    keyVariantMap = dicts.keyVariantMap;
+    variantDisplayName = dicts.variantDisplayName;
+    allVariantKeys = dicts.allVariantKeys;
+    baseVariantKeys = dicts.baseVariantKeys;
+    outpostKeys = dicts.outpostKeys;
 
     // Initialize easter eggs
     for (const [name, data] of Object.entries(eggsRaw)) {
@@ -751,6 +745,7 @@ async function init() {
     initSvg();
     initKeyboard();
     updateDisplay();
+    resetInactivityTimer();
 }
 
 function initKeyboard() {

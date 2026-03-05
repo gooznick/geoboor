@@ -174,6 +174,12 @@ class AudioManager {
         setTimeout(() => this._playNote(1318.51, 'sine', 0.6, 0.15), 100); // E6
     }
 
+    // Playful double blip for the inactivity teaser
+    playTeaserBlip() {
+        this._playNote(659.25, 'sine', 0.1, 0.15); // E5
+        setTimeout(() => this._playNote(783.99, 'sine', 0.15, 0.15), 120); // G5
+    }
+
     // Sad descending minor sequence for game over
     playGameOver() {
         this.stopBgMusic();

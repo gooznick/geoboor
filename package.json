@@ -1,0 +1,23 @@
+{
+  "name": "geoboor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "audio.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gooznick/geoboor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gooznick/geoboor/issues"
+  },
+  "homepage": "https://github.com/gooznick/geoboor#readme",
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}
