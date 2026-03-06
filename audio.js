@@ -109,7 +109,8 @@ class AudioManager {
     // --- Sound Effects ---
 
     // Helper to play a quick synthesized note
-    _playNote(freq, type = 'sine', duration = 0.1, vol = 0.5, slideFreq = null) {
+    _playNote(freq, type = 'sine', duration = 0.1, vol = 0.5, slideFreq = null, attack = 0.02) {
+        if (!this.audioCtx) return;
         if (this.isMuted) return;
         this.resume();
 
@@ -123,8 +124,8 @@ class AudioManager {
         }
 
         gain.gain.setValueAtTime(0, this.audioCtx.currentTime);
-        // Quick attack, exponential decay
-        gain.gain.linearRampToValueAtTime(vol, this.audioCtx.currentTime + 0.02);
+        // Configurable attack, exponential decay
+        gain.gain.linearRampToValueAtTime(vol, this.audioCtx.currentTime + attack);
         gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
 
         osc.connect(gain);
@@ -134,9 +135,9 @@ class AudioManager {
         osc.stop(this.audioCtx.currentTime + duration);
     }
 
-    // Soft blip when user types a letter
+    // Sharp click when user types a valid letter
     playUserSelect() {
-        this._playNote(440, 'sine', 0.1, 0.1, 300); // 440 -> 300
+        this._playNote(1200, 'square', 0.04, 0.08, 600, 0.005); // Higher pitch click
         // Start BGM on first keypress if not already playing
         if (!this.isPlayingBgm) {
             this.playBgMusic();
