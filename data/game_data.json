@@ -6648,7 +6648,9 @@
         "population": "1662",
         "establishment": "1933",
         "aliases": [],
-        "outposts": [],
+        "outposts": [
+            "מוצא"
+        ],
         "itm_east": 215022,
         "itm_north": 633456,
         "x": 127,
