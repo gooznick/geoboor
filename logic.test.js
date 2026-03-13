@@ -403,3 +403,59 @@ describe('readGameData — double-letter canonical variants', () => {
     });
 
 });
+
+describe('checkSequence — full game data', () => {
+    let canonicalToName;
+
+    beforeEach(() => {
+        const raw = require('./data/game_data.json');
+        ({ canonicalToName } = readGameData(raw));
+    });
+
+    function run(string, forbidden = []) {
+        const results = [];
+        checkSequence(string, canonicalToName, forbidden, [], results);
+        return results;
+    }
+
+    test('variant name "עין זיון" (shortened וו) is legal and evaluates correctly as partial string', () => {
+        const results = run('עינזיו');
+
+        // There may be other settlements in the real data that start with this.
+        // We mainly want to ensure "עינזיונ" and "עינזיוונ" are present.
+        const shortVariant = results.find(r => r.lastCanonical === 'עינזיונ');
+        expect(shortVariant).toBeDefined();
+        expect(shortVariant).toMatchObject({
+            lastCanonical: 'עינזיונ',
+            letter: 'נ',
+            lettersUntilEnd: 1,
+        });
+
+        const fullVariant = results.find(r => r.lastCanonical === 'עינזיוונ');
+        expect(fullVariant).toBeDefined();
+        expect(fullVariant).toMatchObject({
+            lastCanonical: 'עינזיוונ',
+            letter: 'ו',
+            lettersUntilEnd: 2,
+        });
+    });
+
+    test('variant name "עין זיון" with continuing letters consumes the variant key', () => {
+        // "עינזיונ" + "א" (testing overlap into anything starting with א in real data, such as אילת)
+        const results = run('עינזיונא');
+
+        // Ensure that there is at least one result where the sequence includes 'עינזיונ' 
+        // and it tries to find a continuation starting with 'א' (e.g. אילת)
+        const overlapsWithA = results.filter(r => r.sequence.includes('עינזיונ'));
+        expect(overlapsWithA.length).toBeGreaterThan(0);
+
+        const testCase = overlapsWithA.find(r => r.lastCanonical === 'אילת');
+        expect(testCase).toBeDefined();
+        expect(testCase).toMatchObject({
+            sequence: ['עינזיונ'],
+            forbidden: ['עין זיוון'],
+            lastCanonical: 'אילת',
+            letter: 'י',
+        });
+    });
+});

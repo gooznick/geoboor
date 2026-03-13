@@ -181,9 +181,8 @@ function showInfoPanel(originalVariant, extraMsg = '', displayName = '', customT
 
     const entry = db.get(displayName);
     if (entry) {
-        console.log(entry);
+        infoDetails.innerHTML = `הוקם: ${entry.establishment} | תושבים: ${entry.population}`;
     }
-    infoDetails.innerHTML = `הוקם: ${entry.establishment} | תושבים: ${entry.population}`;
 
 
 
@@ -354,13 +353,6 @@ function showClue() {
         return;
     }
 
-    const nonMetadataOptions = checkResults.filter(r => {
-        const metadata = canonicalToName.get(r.lastCanonical)[2];
-        return metadata !== "short" && metadata !== "outpost";
-    });
-    const compOptions2 = nonMetadataOptions.length > 0 ? nonMetadataOptions : checkResults;
-
-    const picked = randChoice(compOptions);
 
     state.score -= COST_CLUE;
     updateScoreDisplays();
@@ -371,7 +363,7 @@ function showClue() {
     if (clueTimer) clearInterval(clueTimer);
 
 
-    const [displayName, originalVariant, metadata] = canonicalToName.get(picked.lastCanonical);
+    const [displayName, originalVariant, metadata] = canonicalToName.get(state.compNext.lastCanonical);
 
 
     let remaining = 5;
@@ -443,6 +435,7 @@ function randChoice(arr) {
 function handleLetter(ch) {
     ch = removeSofit(ch);
     if (!isHebrewLetter(ch)) return;
+    console.log("handleLetter", ch, state.current);
 
     audioManager.playUserSelect();
     hideInactivityTeaser();
@@ -466,6 +459,7 @@ function handleLetter(ch) {
     }
     state.lastKeyTime = now;
 
+    console.log(state.allOptions)
     // check if user char is in the options (state.allOptions) or it's first move
     isLegal = state.allOptions.some(option => option.letter === ch) || !state.current.length;
 
@@ -474,10 +468,8 @@ function handleLetter(ch) {
 
 
     if (!isLegal) {
-        console.log("Illegal move", state.compNext);
         const [displayName, originalVariant, metadata] = canonicalToName.get(state.compNext.lastCanonical);
 
-        console.log("Illegal move", displayName, originalVariant, metadata);
         showMistakeCircle(displayName);
         showInfoPanel(originalVariant, '', displayName);
 
@@ -541,7 +533,7 @@ function handleLetter(ch) {
     const compOptions = nonMetadataOptions.length > 0 ? nonMetadataOptions : checkResults;
     state.compOptions = compOptions;
     state.compNext = randChoice(compOptions);
-    state.allOptions = nonMetadataOptions;
+    state.allOptions = checkResults;
     const [displayName, originalVariant, metadata] = canonicalToName.get(state.compNext.lastCanonical);
 
     drawCircle(displayName);
