@@ -199,7 +199,6 @@ function hideInfoPanel() {
 // ── Easter Egg ────────────────────────────────────────────────────
 
 function triggerEasterEgg(msg, points) {
-    console.log("triggerEasterEgg", msg, points);
     audioManager.playEasterEgg();
     const floater = document.createElement('div');
     floater.className = 'easter-egg-heart pumping';
@@ -460,7 +459,6 @@ function handleLetter(ch) {
     }
     state.lastKeyTime = now;
 
-    console.log(state.allOptions)
     // check if user char is in the options (state.allOptions) or it's first move
     isLegal = state.allOptions.some(option => option.letter === ch) || !state.current.length;
 
