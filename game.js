@@ -312,7 +312,7 @@ function showGameOverModal(foundNames, missedName = null, skipAudio = false) {
 
     const uniqueNames = new Set(foundNames || []);
 
-    const missedContainer = document.getElementById('game-over-missed-container');
+    //const missedContainer = document.getElementById('game-over-missed-container');
     const missedNameEl = document.getElementById('game-over-missed-name');
     const missedDataEl = document.getElementById('game-over-missed-data');
 
