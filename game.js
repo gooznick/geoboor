@@ -312,21 +312,20 @@ function showGameOverModal(foundNames, missedName = null, skipAudio = false) {
 
     const uniqueNames = new Set(foundNames || []);
 
-    //const missedContainer = document.getElementById('game-over-missed-container');
+    const missedContainer = document.getElementById('game-over-missed-container');
     const missedNameEl = document.getElementById('game-over-missed-name');
     const missedDataEl = document.getElementById('game-over-missed-data');
 
-    // TODO: implement missed name
-    // if (missedName) {
-    //     const entry = db.get(missedName);
-    //     if (entry && missedContainer) {
-    //         missedNameEl.textContent = entry.name;
-    //         missedDataEl.textContent = `הוקם: ${entry.establishment} | תושבים: ${entry.population}`;
-    //         missedContainer.style.display = 'block';
-    //     }
-    // } else if (missedContainer) {
-    //     missedContainer.style.display = 'none';
-    // }
+    if (missedName) {
+        const entry = db.get(missedName);
+        if (entry && missedContainer) {
+            missedNameEl.textContent = entry.name;
+            missedDataEl.textContent = `הוקם: ${entry.establishment} | תושבים: ${entry.population}`;
+            missedContainer.style.display = 'block';
+        }
+    } else if (missedContainer) {
+        missedContainer.style.display = 'none';
+    }
 
     if (uniqueNames.size === 0 && !missedName) {
         const li = document.createElement('li');

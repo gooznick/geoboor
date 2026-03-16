@@ -515,6 +515,7 @@ body {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-overlay.visible .modal-content {
@@ -639,6 +640,11 @@ body {
 
 /* ── Mobile Responsive ── */
 @media (max-width: 768px) {
+
+  #btn-hard {
+    display: none;
+  }
+
 
   html,
   body {
