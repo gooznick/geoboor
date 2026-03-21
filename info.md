@@ -1,7 +1,11 @@
 python3 -m http.server 8765
 
 
-# נופי פרת, קדיתא, מוצא
 
-r ר נאחנריחפמארטאישנהתמר
+bugs:
 
+ורדורדון
+
+zeroize not working
+
+game over modal too long on smartphone

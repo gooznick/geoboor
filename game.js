@@ -460,7 +460,7 @@ function showClue() {
 // ── Display ───────────────────────────────────────────────────────
 
 function updateDisplay() {
-    const display = state.current.split('').reverse().join('');
+    const display = state.current;
     const wrong = state.wrongLetter ? `<span class="wrong-letter">${state.wrongLetter}</span>` : '';
 
     if (state.displayOffset === undefined) state.displayOffset = 0;
@@ -538,7 +538,7 @@ function handleLetter(ch) {
     isLegal = state.allOptions.some(option => option.letter === ch) || !state.current.length;
 
 
-    const userCurrent = ch + state.current;
+    const userCurrent = state.current + ch;
 
 
     if (!isLegal) {
@@ -566,7 +566,7 @@ function handleLetter(ch) {
 
 
     // Computer finds the next one (for him to choose)
-    const forwardString1 = userCurrent.split('').reverse().join('');
+    const forwardString1 = userCurrent;
     const checkResults1 = [];
     checkSequence(forwardString1, canonicalToName, [], [], checkResults1);
     const nonMetadataOptions1 = checkResults1.filter(r => {
@@ -595,7 +595,7 @@ function handleLetter(ch) {
 
     audioManager.playComputerSelect();
 
-    state.current = compLetter + userCurrent;
+    state.current = userCurrent + compLetter;
 
     // Check if it's an easter egg. 
 
@@ -610,7 +610,7 @@ function handleLetter(ch) {
 
 
     // Computer finds the next one (for the user to choose)
-    const forwardString = state.current.split('').reverse().join('');
+    const forwardString = state.current;
     const checkResults = [];
     checkSequence(forwardString, canonicalToName, [], [], checkResults);
     const nonMetadataOptions = checkResults.filter(r => {
@@ -702,8 +702,7 @@ function showInactivityTeaser() {
     if (state.wrongLetter || gameOverModal.classList.contains('visible')) return;
 
     const checkResults = [];
-    // userCurrent is built right-to-left, so reverse it for checkSequence which reads left-to-right
-    const forwardString = state.current.split('').reverse().join('');
+    const forwardString = state.current;
     checkSequence(forwardString, canonicalToName, [], [], checkResults);
 
 
