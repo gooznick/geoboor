@@ -36,7 +36,8 @@ let state = {
     compOptions: [],
     allOptions: [],
     gameOverTimeout: null,
-    isProcessing: false
+    isProcessing: false,
+    lastFailedSequence: null
 };
 
 let bestScore = parseInt(localStorage.getItem('geoboor_best_score')) || 0;
@@ -382,6 +383,16 @@ function closeGameOverModal() {
 function showHelpModal() {
     const modal = document.getElementById('help-modal');
     if (modal) {
+        const failedContainer = document.getElementById('last-failed-sequence-container');
+        const failedText = document.getElementById('last-failed-sequence-text');
+        if (failedContainer && failedText) {
+            if (state.lastFailedSequence) {
+                failedText.textContent = state.lastFailedSequence;
+                failedContainer.style.display = 'block';
+            } else {
+                failedContainer.style.display = 'none';
+            }
+        }
         modal.classList.add('visible');
     }
 }
@@ -542,6 +553,7 @@ function handleLetter(ch) {
 
 
     if (!isLegal) {
+        state.lastFailedSequence = userCurrent;
         const [displayName, originalVariant, metadata] = canonicalToName.get(state.compNext.lastCanonical);
         const foundNames = state.allOptions.length > 0 ? state.allOptions[0].forbidden : [];
 
