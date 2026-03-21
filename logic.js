@@ -239,6 +239,29 @@ function checkSequence(string, canonicalToName, forbidden, sequence, results) {
 
 
 
+function getComputerOptions(string, canonicalToName) {
+    const results = [];
+    checkSequence(string, canonicalToName, [], [], results);
+    const nonMetadata = results.filter(r => {
+        const metadata = canonicalToName.get(r.lastCanonical)[2];
+        return metadata !== "short" && metadata !== "outpost";
+    });
+    return nonMetadata.length > 0 ? nonMetadata : results;
+}
+
+function getUserOptions(string, canonicalToName) {
+    const results = [];
+    checkSequence(string, canonicalToName, [], [], results);
+    const nonMetadata = results.filter(r => {
+        const metadata = canonicalToName.get(r.lastCanonical)[2];
+        return metadata !== "short" && metadata !== "outpost";
+    });
+    return {
+        allOptions: results,
+        compOptions: nonMetadata.length > 0 ? nonMetadata : results
+    };
+}
+
 // Export for Node.js environments (like Jest)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -251,6 +274,8 @@ if (typeof module !== 'undefined' && module.exports) {
         toCanonical,
         getVariants,
         readGameData,
-        checkSequence
+        checkSequence,
+        getComputerOptions,
+        getUserOptions
     };
 }

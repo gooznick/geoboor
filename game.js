@@ -567,13 +567,7 @@ function handleLetter(ch) {
 
     // Computer finds the next one (for him to choose)
     const forwardString1 = userCurrent;
-    const checkResults1 = [];
-    checkSequence(forwardString1, canonicalToName, [], [], checkResults1);
-    const nonMetadataOptions1 = checkResults1.filter(r => {
-        const metadata = canonicalToName.get(r.lastCanonical)[2];
-        return metadata !== "short" && metadata !== "outpost";
-    });
-    const compOptions1 = nonMetadataOptions1.length > 0 ? nonMetadataOptions1 : checkResults1;
+    const compOptions1 = getComputerOptions(forwardString1, canonicalToName);
     if (compOptions1.length === 0) {
         const [displayName, originalVariant, metadata] = canonicalToName.get(state.compNext.lastCanonical);
         const foundNames = state.allOptions.length > 0 ? state.allOptions[0].forbidden : [];
@@ -584,11 +578,9 @@ function handleLetter(ch) {
     choice = randChoice(compOptions1);
 
     // If we were forced to use a metadata option, show a teaser
-    if (nonMetadataOptions1.length === 0) {
-        const metadata = canonicalToName.get(choice.lastCanonical)[2];
-        if (metadata === 'short' || metadata === 'outpost') {
-            showMetadataTeaser(metadata);
-        }
+    const choiceMetadata = canonicalToName.get(choice.lastCanonical)[2];
+    if (choiceMetadata === 'short' || choiceMetadata === 'outpost') {
+        showMetadataTeaser(choiceMetadata);
     }
 
     const compLetter = choice.letter;
@@ -611,15 +603,9 @@ function handleLetter(ch) {
 
     // Computer finds the next one (for the user to choose)
     const forwardString = state.current;
-    const checkResults = [];
-    checkSequence(forwardString, canonicalToName, [], [], checkResults);
-    const nonMetadataOptions = checkResults.filter(r => {
-        const metadata = canonicalToName.get(r.lastCanonical)[2];
-        return metadata !== "short" && metadata !== "outpost";
-    });
+    const { allOptions: checkResults, compOptions } = getUserOptions(forwardString, canonicalToName);
 
 
-    const compOptions = nonMetadataOptions.length > 0 ? nonMetadataOptions : checkResults;
     state.compOptions = compOptions;
     state.compNext = randChoice(compOptions);
     state.allOptions = checkResults;
@@ -701,16 +687,8 @@ function resetInactivityTimer() {
 function showInactivityTeaser() {
     if (state.wrongLetter || gameOverModal.classList.contains('visible')) return;
 
-    const checkResults = [];
     const forwardString = state.current;
-    checkSequence(forwardString, canonicalToName, [], [], checkResults);
-
-
-    const nonMetadataOptions = checkResults.filter(r => {
-        const metadata = canonicalToName.get(r.lastCanonical)[2];
-        return metadata !== "short" && metadata !== "outpost";
-    });
-    const compOptions = nonMetadataOptions.length > 0 ? nonMetadataOptions : checkResults;
+    const { compOptions } = getUserOptions(forwardString, canonicalToName);
     if (!compOptions.length) return;
 
     const uniqueLetters = new Set(compOptions.map(opt => opt.letter)).size;
@@ -737,7 +715,7 @@ function showInactivityTeaser() {
                 `נשארו ${uniqueLetters} אפשרויות לאות הבאה... קלי קלות. 💪`,
                 `זה נהיה צפוף... נותרו ${uniqueLetters} אופציות. 🥵`,
                 `יש רק ${uniqueLetters} אותיות שממשיכות את הרצף. קדימה! 🔥`,
-                `כל צעד סוגר אפשרויות. ${uniqueLetters} אותיות לפניכם. 🧐`
+                `רק ${uniqueLetters} אותיות אפשריות לפניכם. 🧐`
             ];
         } else {
             phrases = [

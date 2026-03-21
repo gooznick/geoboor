@@ -1,4 +1,4 @@
-const { stripAndReverse, isHebrewLetter, nameVariants, getVariants, readGameData, checkSequence } = require('./logic.js');
+const { stripAndReverse, isHebrewLetter, nameVariants, getVariants, readGameData, checkSequence, getComputerOptions, getUserOptions } = require('./logic.js');
 
 describe('מַפָּאוֹת Game Logic', () => {
 
@@ -457,5 +457,47 @@ describe('checkSequence — full game data', () => {
             lastCanonical: 'אילת',
             letter: 'י',
         });
+    });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// getComputerOptions and getUserOptions tests
+// ────────────────────────────────────────────────────────────────────────────
+
+describe('getComputerOptions and getUserOptions', () => {
+    let canonicalToName;
+
+    beforeEach(() => {
+        const raw = {
+            'תל אביב': {
+                name: 'תל אביב', population: '100', establishment: '1900',
+                aliases: [], outposts: ['תל אבנימ'], x: 1, y: 1
+            }
+        };
+        ({ canonicalToName } = readGameData(raw));
+    });
+
+    test('getComputerOptions filters out metadata options when base options exist', () => {
+        // "תל" matches both "תלאביב" and "תלאבנימ"
+        const compOptions = getComputerOptions('תל', canonicalToName);
+        expect(compOptions).toHaveLength(1);
+        expect(compOptions[0].lastCanonical).toBe('תלאביב');
+    });
+
+    test('getComputerOptions falls back to metadata option if no base option exists', () => {
+        // "תלאבנ" only matches "תלאבנימ" (outpost)
+        const compOptions = getComputerOptions('תלאבנ', canonicalToName);
+        expect(compOptions).toHaveLength(1);
+        expect(compOptions[0].lastCanonical).toBe('תלאבנימ');
+    });
+
+    test('getUserOptions returns allOptions with meta and compOptions without meta', () => {
+        const { allOptions, compOptions } = getUserOptions('תל', canonicalToName);
+        expect(allOptions).toHaveLength(2);
+        const allCanons = allOptions.map(o => o.lastCanonical).sort();
+        expect(allCanons).toEqual(['תלאביב', 'תלאבנימ'].sort());
+
+        expect(compOptions).toHaveLength(1);
+        expect(compOptions[0].lastCanonical).toBe('תלאביב');
     });
 });
