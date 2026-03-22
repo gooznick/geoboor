@@ -173,6 +173,18 @@ body {
   animation: pulseCircle 0.6s ease-out;
 }
 
+#former-settlement-circle {
+  fill: rgba(78, 205, 196, 0.3);
+  stroke: #4ecdc4;
+  stroke-width: 3;
+  display: none;
+  filter: drop-shadow(0 0 10px rgba(78, 205, 196, 1));
+}
+
+#former-settlement-circle.active {
+  display: block;
+}
+
 @keyframes pulseCircle {
   0% {
     stroke-width: 10;

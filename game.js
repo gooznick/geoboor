@@ -60,6 +60,7 @@ const audioManager = new AudioManager();
 const mapImg = document.getElementById('map-img');
 const svgOverlay = document.getElementById('svg-overlay');
 const circleEl = document.getElementById('settlement-circle');
+const formerCircleEl = document.getElementById('former-settlement-circle');
 const currentStr = document.getElementById('current-string');
 const scoreEl = document.getElementById('score');
 const bestScoreEl = document.getElementById('best-score');
@@ -103,6 +104,29 @@ function drawCircle(canonicalKey) {
     state.chosenCircleKey = canonicalKey;
 }
 
+function drawFormerCircle(displayName) {
+    if (!formerCircleEl) return;
+    if (!displayName) {
+        formerCircleEl.style.display = 'none';
+        formerCircleEl.classList.remove('active');
+        return;
+    }
+    const entry = db.get(displayName);
+    if (!entry) {
+        formerCircleEl.style.display = 'none';
+        formerCircleEl.classList.remove('active');
+        return;
+    }
+    formerCircleEl.setAttribute('cx', entry.x);
+    formerCircleEl.setAttribute('cy', entry.y);
+    formerCircleEl.setAttribute('r', 10);
+    formerCircleEl.removeAttribute('style');
+
+    formerCircleEl.classList.remove('active');
+    void formerCircleEl.getBoundingClientRect();
+    formerCircleEl.classList.add('active');
+}
+
 function clearExtraCircles() {
     const extras = svgOverlay.querySelectorAll('.found-circle, .mistake-circle');
     extras.forEach(el => el.remove());
@@ -111,6 +135,7 @@ function clearExtraCircles() {
 function showMistakeCircle(missedName, foundNames = []) {
     drawCircle(missedName);
     circleEl.style.display = 'none';
+    if (formerCircleEl) formerCircleEl.style.display = 'none';
     clearExtraCircles();
 
     // Draw found settlements
@@ -143,6 +168,10 @@ function showMistakeCircle(missedName, foundNames = []) {
 function hideCircle() {
     circleEl.style.display = 'none';
     circleEl.classList.remove('active');
+    if (formerCircleEl) {
+        formerCircleEl.style.display = 'none';
+        formerCircleEl.classList.remove('active');
+    }
     clearExtraCircles();
     if (clueTimer) { clearInterval(clueTimer); clueTimer = null; }
     const btnClue = document.getElementById('btn-clue');
@@ -672,6 +701,12 @@ function handleLetter(ch) {
     const [displayName, originalVariant, metadata] = canonicalToName.get(state.compNext.lastCanonical);
 
     drawCircle(displayName);
+    const formerList = state.compNext.forbidden;
+    if (formerList && formerList.length > 0) {
+        drawFormerCircle(formerList[formerList.length - 1]);
+    } else {
+        drawFormerCircle(null);
+    }
     updateDisplay();
     addScore(bonus);
 
