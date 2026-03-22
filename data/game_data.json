@@ -1615,15 +1615,6 @@
         "x": 124,
         "y": 94
     },
-    "בן שמן (כפר נוער)": {
-        "name": "בן שמן",
-        "population": "269",
-        "establishment": "1921",
-        "aliases": [],
-        "outposts": [],
-        "x": 98,
-        "y": 246
-    },
     "בן שמן (מושב)": {
         "name": "בן שמן",
         "population": "849",
@@ -4419,11 +4410,13 @@
         "y": 146
     },
     "כפר גלים": {
-        "name": "כפר גלים",
+        "name": "",
         "population": "161",
         "establishment": "1952",
         "aliases": [],
-        "outposts": [],
+        "outposts": [
+            "כפר גלים"
+        ],
         "x": 103,
         "y": 129
     },
@@ -5133,7 +5126,9 @@
         "population": "988",
         "establishment": "1949",
         "aliases": [],
-        "outposts": [],
+        "outposts": [
+            "לוחמי הגטאות"
+        ],
         "x": 121,
         "y": 100
     },
@@ -5201,11 +5196,13 @@
         "y": 178
     },
     "מאיר שפיה": {
-        "name": "מאיר שפיה",
+        "name": "",
         "population": "141",
         "establishment": "1923",
         "aliases": [],
-        "outposts": [],
+        "outposts": [
+            "מאיר שפיה"
+        ],
         "x": 105,
         "y": 154
     },
@@ -5408,20 +5405,24 @@
         "y": 154
     },
     "מדרשת בן גוריון": {
-        "name": "מדרשת בן גוריון",
+        "name": "",
         "population": "1571",
         "establishment": "1965",
         "aliases": [],
-        "outposts": [],
+        "outposts": [
+            "מדרשת בן גוריון"
+        ],
         "x": 79,
         "y": 407
     },
     "מדרשת רופין": {
-        "name": "מדרשת רופין",
+        "name": "",
         "population": "294",
         "establishment": "1948",
         "aliases": [],
-        "outposts": [],
+        "outposts": [
+            "מדרשת רופין"
+        ],
         "x": 97,
         "y": 190
     },

@@ -3,7 +3,7 @@
 // ── Game Configuration ──────────────────────────────────────────────
 const COST_REVEAL = 100; // Cost to reveal history
 const COST_CLUE = 300;    // Cost to reveal next settlement name
-const POINTS_BASE = 5;      // Base points per correct letter
+const POINTS_BASE = 600;      // Base points per correct letter
 const BONUS_FAST_TIME = 5;  // Seconds threshold for max bonus
 const BONUS_FAST_PTS = 15;  // Max bonus points
 const BONUS_MED_TIME = 10;  // Seconds threshold for med bonus
@@ -414,7 +414,7 @@ function clearForbid() {
     if (revealTimer) { clearInterval(revealTimer); revealTimer = null; }
     revealListEl.classList.remove('visible');
     const btnReveal = document.getElementById('btn-reveal');
-    if (btnReveal) btnReveal.textContent = `👁 ארכיון (${COST_REVEAL} נק')`;
+    if (btnReveal) btnReveal.textContent = `👁 הסטוריה (${COST_REVEAL} נק')`;
 }
 
 function setForbid(guaranteed) {
@@ -424,6 +424,54 @@ function setForbid(guaranteed) {
 
 let revealTimer = null;
 
+function revealOption() {
+    if (state.score < COST_REVEAL) {
+        scoreEl.style.color = '#e63946';
+        setTimeout(() => { scoreEl.style.color = ''; }, 600);
+        return;
+    }
+
+    if (!state.compNext || !state.compNext.forbidden || state.compNext.forbidden.length === 0) {
+        scoreEl.style.color = '#e63946';
+        setTimeout(() => { scoreEl.style.color = ''; }, 600);
+        return;
+    }
+
+    state.score -= COST_REVEAL;
+    updateScoreDisplays();
+    showBonus(-COST_REVEAL);
+    audioManager.playClue();
+
+    const btnReveal = document.getElementById('btn-reveal');
+    if (revealTimer) clearInterval(revealTimer);
+
+    revealListEl.innerHTML = '';
+    const history = [...state.compNext.forbidden].reverse();
+    for (const name of history) {
+        const li = document.createElement('li');
+        li.textContent = name;
+        revealListEl.appendChild(li);
+    }
+    revealListEl.classList.add('visible');
+
+    let remaining = 8;
+    const updateBtn = () => {
+        if (btnReveal) btnReveal.textContent = `👁 נחשף (${remaining}s)`;
+    };
+    updateBtn();
+
+    revealTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(revealTimer);
+            revealTimer = null;
+            revealListEl.classList.remove('visible');
+            if (btnReveal) btnReveal.textContent = `👁 הסטוריה (${COST_REVEAL} נק')`;
+        } else {
+            updateBtn();
+        }
+    }, 1000);
+}
 
 let clueTimer = null;
 
@@ -896,7 +944,7 @@ async function init() {
 
     // Init Hint buttons with constants
     const btnReveal = document.getElementById('btn-reveal');
-    if (btnReveal) btnReveal.textContent = `👁 ארכיון (${COST_REVEAL} נק')`;
+    if (btnReveal) btnReveal.textContent = `👁 הסטוריה (${COST_REVEAL} נק')`;
 
     const btnClue = document.getElementById('btn-clue');
     if (btnClue) btnClue.textContent = `🎯 רמז (${COST_CLUE} נק')`;

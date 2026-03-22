@@ -754,11 +754,11 @@ body {
     gap: 4px;
   }
 
-  #btn-reveal,
   #btn-soft {
     display: none;
   }
 
+  #btn-reveal,
   #btn-clue {
     padding: 6px;
     font-size: 0.75rem;
